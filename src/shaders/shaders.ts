@@ -24,13 +24,12 @@ import clusteringComputeRaw from './clustering.cs.wgsl?raw';
 // Note that these are declared in a somewhat roundabout way because otherwise minification will drop variables
 // that are unused in host side code.
 export const constants = {
-    bindGroup_scene: 0,
-    bindGroup_model: 1,
-    bindGroup_material: 2,
+    get bindGroup_scene() { return 0; },
+    get bindGroup_model() { return 1; },
+    get bindGroup_material() { return 2; },
 
-    moveLightsWorkgroupSize: 128,
-
-    lightRadius: 2
+    get moveLightsWorkgroupSize() { return 128; },
+    get lightRadius() { return '2.f'; }
 };
 
 // =================================
