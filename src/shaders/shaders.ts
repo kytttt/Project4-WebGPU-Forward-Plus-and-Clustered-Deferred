@@ -1,5 +1,7 @@
 // CHECKITOUT: this file loads all the shaders and preprocesses them with some common code
 
+import { Camera } from '../stage/camera';
+
 import commonRaw from './common.wgsl?raw';
 
 import naiveVertRaw from './naive.vs.wgsl?raw';
@@ -19,33 +21,22 @@ import clusteringComputeRaw from './clustering.cs.wgsl?raw';
 
 // CHECKITOUT: feel free to add more constants here and to refer to them in your shader code
 
-const shaderConstants = Object.freeze({
+// Note that these are declared in a somewhat roundabout way because otherwise minification will drop variables
+// that are unused in host side code.
+export const constants = {
     bindGroup_scene: 0,
     bindGroup_model: 1,
     bindGroup_material: 2,
+
     moveLightsWorkgroupSize: 128,
-    lightRadius: '2.f'
-});
 
-export const constants = {
-    get bindGroup_scene() { return shaderConstants.bindGroup_scene as number; },
-    get bindGroup_model() { return shaderConstants.bindGroup_model as number; },
-    get bindGroup_material() { return shaderConstants.bindGroup_material as number; },
-
-    get moveLightsWorkgroupSize() { return shaderConstants.moveLightsWorkgroupSize as number; },
-    get lightRadius() { return shaderConstants.lightRadius as string; }
+    lightRadius: 2,
 };
 
 // =================================
 
 function evalShaderRaw(raw: string) {
-    return raw.replace(/\$\{(\w+)\}/g, (_m, key: string) => {
-        const val = (shaderConstants as Record<string, string | number>)[key];
-        if (val === undefined) {
-            throw new Error(`Unknown shader constant: ${key}`);
-        }
-        return String(val);
-    });
+    return eval('`' + raw.replaceAll('${', '${constants.') + '`');
 }
 
 const commonSrc: string = evalShaderRaw(commonRaw);
