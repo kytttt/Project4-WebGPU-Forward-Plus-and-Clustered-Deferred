@@ -29,7 +29,7 @@ export const constants = {
     get bindGroup_material() { return 2; },
 
     get moveLightsWorkgroupSize() { return 128; },
-    get lightRadius() { return '2.f'; }
+    get lightRadius() { return 2; }
 };
 
 // =================================
