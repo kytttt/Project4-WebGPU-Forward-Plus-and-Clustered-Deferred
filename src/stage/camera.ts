@@ -14,9 +14,46 @@ class CameraUniforms {
     // TODO-2: add extra functions to set values needed for light clustering here
 }
 
+
+class ClusteringUniformsHost {
+
+    readonly buffer = new ArrayBuffer((16 * 3 + 4 + 4) * 4);
+    private floatView = new Float32Array(this.buffer);
+    private uintView  = new Uint32Array(this.buffer);
+
+    private readonly viewMatOff = 0;
+    private readonly projMatOff = 16;
+    private readonly invProjOff = 32;
+
+    private readonly params0Off = 48;
+    private readonly params1Off = 52;
+
+    setMatrices(viewMat: Float32Array, projMat: Float32Array, invProjMat: Float32Array) {
+        this.floatView.set(viewMat, this.viewMatOff);
+        this.floatView.set(projMat, this.projMatOff);
+        this.floatView.set(invProjMat, this.invProjOff);
+    }
+
+    setParams(screenW: number, screenH: number, near: number, far: number,
+              clustersX: number, clustersY: number, clustersZ: number, maxLightsPerCluster: number) {
+        this.floatView[this.params0Off + 0] = screenW;
+        this.floatView[this.params0Off + 1] = screenH;
+        this.floatView[this.params0Off + 2] = near;
+        this.floatView[this.params0Off + 3] = far;
+
+        this.uintView[this.params1Off + 0] = clustersX;
+        this.uintView[this.params1Off + 1] = clustersY;
+        this.uintView[this.params1Off + 2] = clustersZ;
+        this.uintView[this.params1Off + 3] = maxLightsPerCluster;
+    }
+}
+
 export class Camera {
     uniforms: CameraUniforms = new CameraUniforms();
     uniformsBuffer: GPUBuffer;
+
+    clusteringUniforms: ClusteringUniformsHost = new ClusteringUniformsHost();
+    clusteringUniformsBuffer: GPUBuffer;
 
     projMat: Mat4 = mat4.create();
     cameraPos: Vec3 = vec3.create(-7, 2, 0);
@@ -31,6 +68,11 @@ export class Camera {
     static readonly nearPlane = 0.1;
     static readonly farPlane = 1000;
 
+    static readonly clustersX = 10;
+    static readonly clustersY = 10;
+    static readonly clustersZ = 32;
+    static readonly maxLightsPerCluster = 512;
+
     keys: { [key: string]: boolean } = {};
 
     constructor () {
@@ -42,6 +84,12 @@ export class Camera {
         this.uniformsBuffer = device.createBuffer({
             label: "Camera Uniforms",
             size: this.uniforms.buffer.byteLength,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        this.clusteringUniformsBuffer = device.createBuffer({
+            label: "Clustering ",
+            size: this.clusteringUniforms.buffer.byteLength,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -138,7 +186,28 @@ export class Camera {
         this.uniforms.viewProjMat = viewProjMat;
 
         // TODO-2: write to extra buffers needed for light clustering here
+        {
+            const lookPos = vec3.add(this.cameraPos, vec3.scale(this.cameraFront, 1));
+            const viewMat = mat4.lookAt(this.cameraPos, lookPos, [0, 1, 0]);
+            const invProjMat = mat4.invert(this.projMat);
 
+            const screenW = canvas.width;
+            const screenH = canvas.height;
+
+            this.clusteringUniforms.setMatrices(
+                new Float32Array(viewMat),
+                new Float32Array(this.projMat),
+                new Float32Array(invProjMat)
+            );
+            this.clusteringUniforms.setParams(
+                screenW, screenH,
+                Camera.nearPlane, Camera.farPlane,
+                Camera.clustersX, Camera.clustersY, Camera.clustersZ,
+                Camera.maxLightsPerCluster
+            );
+
+            device.queue.writeBuffer(this.clusteringUniformsBuffer, 0, this.clusteringUniforms.buffer);
+        }
         // TODO-1.1: upload `this.uniforms.buffer` (host side) to `this.uniformsBuffer` (device side)
         // check `lights.ts` for examples of using `device.queue.writeBuffer()`
         device.queue.writeBuffer(this.uniformsBuffer, 0, this.uniforms.buffer);

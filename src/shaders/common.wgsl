@@ -12,6 +12,18 @@ struct LightSet {
 
 // TODO-2: you may want to create a ClusterSet struct similar to LightSet
 
+struct ClusteringUniforms {
+    viewMat: mat4x4f,
+    projMat: mat4x4f,
+    invProjMat: mat4x4f,
+
+    // x = screen width (pixels), y = screen height (pixels), z = near, w = far
+    screenSize_near_far: vec4f,
+
+    // x = clustersX, y = clustersY, z = clustersZ, w = maxLightsPerCluster
+    clusterDims_maxLights: vec4u
+};
+
 struct CameraUniforms {
     // TODO-1.3: add an entry for the view proj mat (of type mat4x4f)
     viewProjMat: mat4x4f
