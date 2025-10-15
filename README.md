@@ -8,12 +8,14 @@ WebGL Forward+ and Clustered Deferred Shading
 
 
 ### Live Demo
-
+Click this screenshot to go to the website.  
 [![](imgs/Screenshot.png)](https://kytttt.github.io/Project4-WebGPU-Forward-Plus-and-Clustered-Deferred/)
 
 ### Demo Video/GIF
 
-[![](imgs/example.gif)](https://kytttt.github.io/Project4-WebGPU-Forward-Plus-and-Clustered-Deferred/)
+<video controls autoplay loop muted playsinline width="1000">
+  <source src="imgs/example.mp4" type="video/mp4" />
+</video>
 
 ### Project Overview
 This project implements Naive, Forward+ and Clustered Deferred Shading in WebGPU for real-time rendering of the Sponza Atrium scene illuminated by hundreds to thousands of dynamic point lights. The goal is to efficiently manage and compute lighting in dense scenes using GPU compute passes and clustered light assignment.
